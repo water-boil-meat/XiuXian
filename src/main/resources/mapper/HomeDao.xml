@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.dreamtech.xiuxian.dao.HomeDao">
+	<select id="getInitInfoByStateId" resultType="State">
+		SELECT
+		state_id,state_name,state_exp,success_rate,state_desc
+		FROM
+		tb_state
+		WHERE
+		state_id=#{stateId}
+	</select>
+	<select id="getStateList" resultType="State">
+		SELECT
+		state_id,state_name,state_exp,success_rate,state_desc
+		FROM
+		tb_state
+		ORDER BY
+		state_id
+	</select>
+	<update id="saveExpChange">
+		UPDATE
+		tb_person
+		SET
+		exp=#{exp}
+		WHERE
+		user_id=#{userId}
+	</update>
+	<update id="breakState">
+		UPDATE
+		tb_person
+		SET
+		state_id=#{stateId}
+		WHERE
+		user_id=#{userId}
+	</update>
+	<select id="getUserById" resultType="Person">
+		SELECT
+		user_id,exp,state_id,username
+		FROM
+		tb_person
+		WHERE
+		user_id=#{userId}
+	</select>
+</mapper>
+    

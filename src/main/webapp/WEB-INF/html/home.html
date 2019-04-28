@@ -1,0 +1,189 @@
+<html>
+<head>
+<link rel="stylesheet"
+	href="//g.alicdn.com/msui/sm/0.6.2/css/sm.min.css">
+<link rel="stylesheet"
+	href="//g.alicdn.com/msui/sm/0.6.2/css/sm-extend.min.css">
+<title>修仙世界</title>
+</head>
+<body>
+	<header class="bar bar-nav">
+		<h1 class="title">修仙世界</h1>
+	</header>
+	<div class="content">
+		<div class="content-block">
+			<div id="user"></div>
+			<div id="the_state"></div>
+			<div id="the_desc"></div>
+		</div>
+		<div class="content-padded grid-demo">
+			<div style="text-align: center" id="exp"></div>
+			<div style="text-align: center">
+				<progress max="100" value="0" id="pg"></progress>
+			</div>
+			<p>
+				<a class="button button-danger" onclick="breakState();">突破当前境界</a>
+			</p>
+		</div>
+	</div>
+	<script type='text/javascript'
+		src='//g.alicdn.com/sj/lib/zepto/zepto.min.js' charset='utf-8'></script>
+	<script type='text/javascript'
+		src='//g.alicdn.com/msui/sm/0.6.2/js/sm.min.js' charset='utf-8'></script>
+	<script type='text/javascript'
+		src='//g.alicdn.com/msui/sm/0.6.2/js/sm-extend.min.js' charset='utf-8'></script>
+	<script>
+		//初始化数据URL
+		var url = '/xiuxian/getinitinfo';
+		//境界显示
+		var state = document.getElementById('the_state');
+		//境界描述显示
+		var desc = document.getElementById('the_desc');
+		//个人经验显示
+		var exp = document.getElementById('exp');
+		//个人姓名显示
+		var user = document.getElementById('user');
+		//个人经验数值
+		var tempExp = 0;
+		//当前境界总经验数值
+		var tempTopExp = 0;
+		//进度条
+		var pg = document.getElementById('pg');
+		//经验值不足时候无法突破
+		var canBreak = false;
+		//整数成功率
+		var successRate = 0;
+
+		//突破按钮点击处理
+		function breakState() {
+			if (canBreak == false) {
+				$.toast("修为不足无法突破");
+			} else {
+				$.confirm("你当前突破的成功率是" + successRate + "%，确定尝试吗？", function() {
+					tryBreak();
+				});
+			}
+		};
+
+		//突破成功率处理
+		var getRandom = function(probability) {
+			var probability = probability * 100 || 1;
+			var odds = Math.floor(Math.random() * 100);
+			if (probability === 1) {
+				return 1;
+			}
+			if (odds < probability) {
+				return 1;
+			} else {
+				return 0;
+			}
+		};
+
+		//尝试突破
+		function tryBreak() {
+			var rate = successRate / 100;
+			var success = getRandom(rate);
+			if (success) {
+				submitBreak();
+			} else {
+				$.toast("道友，你突破失败了，损失经验" + tempTopExp);
+				tempExp -= tempTopExp;
+			}
+		};
+
+		//提交突破请求
+		function submitBreak() {
+			$.ajax({
+				url : "/xiuxian/submitbreak",
+				async : false,
+				cache : false,
+				type : "get",
+				dataType : 'json',
+				success : function(data) {
+					if (data.success) {
+						$.toast("恭喜，突破成功！");
+						window.location.reload();
+					} else {
+						$.toast('失败：' + data.errMsg);
+					}
+				}
+			});
+		}
+
+		//获取初始化信息
+		$(function() {
+			$.ajax({
+				url : url,
+				async : false,
+				cache : false,
+				type : "get",
+				dataType : 'json',
+				success : function(data) {
+					if (data.success) {
+						exp.innerText = "进度：" + data.user.exp + "/"
+								+ data.state.stateExp;
+						tempExp = data.user.exp;
+						tempTopExp = data.state.stateExp;
+						if (tempExp >= tempTopExp) {
+							canBreak = true;
+						}
+						state.innerText = "当前境界：" + data.state.stateName;
+						desc.innerText = data.state.stateDesc;
+						user.innerText = data.user.username;
+						successRate = data.state.successRate;
+					} else {
+						$.toast('失败！' + data.errMsg);
+					}
+				}
+			});
+		});
+		//JS后台执行
+		var tempTimer;
+		document.addEventListener('visibilitychange', function() {
+			var isHidden = document.hidden;
+			if (isHidden) {
+				tempTimer = setInterval(function(e) {
+					tempExp += 1;
+				}, 1000);
+			} else {
+				clearInterval(tempTimer);
+			}
+		});
+		//进度条设置
+		setInterval(function(e) {
+			if (pg.value != 100) {
+				pg.value++;
+			} else {
+				tempExp += 1;
+				exp.innerText = "进度：" + tempExp + "/" + tempTopExp;
+				if (tempExp == tempTopExp) {
+					canBreak = true;
+				}
+				pg.value = 0;
+			}
+		}, 10);
+		//每3秒进行一次数据同步
+		setInterval(function(e) {
+			submitExpChange();
+		}, 3000);
+
+		//提交数据
+		function submitExpChange() {
+			$.ajax({
+				url : "/xiuxian/submitexpchange",
+				async : false,
+				cache : false,
+				type : "get",
+				dataType : 'json',
+				data : {
+					exp : tempExp
+				},
+				success : function(data) {
+					if (data.success) {
+					}
+				}
+			});
+		};
+	</script>
+</body>
+</html>

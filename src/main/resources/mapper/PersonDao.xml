@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.dreamtech.xiuxian.dao.PersonDao">
+	<select id="getPersonByUsernameAndPassword" resultType="Person">
+		SELECT
+		user_id,exp,state_id,username,password
+		FROM
+		tb_person
+		WHERE
+		username=#{username}
+		AND
+		password=#{password}
+	</select>
+</mapper>
+    
